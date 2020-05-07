@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- bake-k8s/namespace.yaml
+- bake-k8s/job.yaml
+
+namespace: buildah-arm64-bake # also change in bake-k8s/namespace.yaml
+
+commonLabels:
+  app: buildah-arm64-bake
+
+configMapGenerator:
+- name: sources
+  files:
+  - Dockerfile
+  - buildah-install.sh
+
+secretGenerator:
+  - name: docker-hub-secrets
+    files:
+      - auth.json

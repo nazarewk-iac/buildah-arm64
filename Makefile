@@ -1,8 +1,15 @@
-UPSTREAM_TAG ?= v1.14.8
+BUILDAH_VERSION ?= 1.14.8
+REPOSITORY ?= nazarewk/buildah-arm64
+IMAGE ?= ${REPOSITORY}:v${BUILDAH_VERSION}
 
-build:
-	docker buildx build -t nazarewk/buildah-arm64:"${UPSTREAM_TAG}" --build-arg UPSTREAM_TAG="${UPSTREAM_TAG}" --platform=linux/arm64 .
+.ONESHELL:
 
-push:
-	docker buildx build --pull --push -t nazarewk/buildah-arm64:"${UPSTREAM_TAG}" --build-arg UPSTREAM_TAG="${UPSTREAM_TAG}" --platform=linux/arm64 .
+apply:
+	kubectl apply -k .
 
+reapply:
+	kubectl -n buildah-arm64-bake delete job buildah || true
+	$(MAKE) apply
+
+delete:
+	kubectl delete -k .

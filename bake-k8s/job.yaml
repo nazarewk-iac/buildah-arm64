@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: buildah
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: buildah
+    spec:
+      restartPolicy: Never
+
+      containers:
+      - name: build
+        image: registry.fedoraproject.org/fedora:latest
+
+        securityContext:
+          privileged: true
+
+        env:
+          - name: BUILDAH_ISOLATION
+            value: chroot
+          - name: IMAGE_REPOSITORY
+            value: nazarewk/buildah-arm64
+          - name: BUILDAH_VERSION
+            value: '1.14.8'
+          - name: IMAGE
+            value: "$(IMAGE_REPOSITORY):v$(BUILDAH_VERSION)"
+
+        command:
+        - /bin/bash
+        - -xeEuo
+        - pipefail
+        - -c
+        - |-
+          ./buildah-install.sh
+          buildah bud -t "${IMAGE}" --build-arg BUILDAH_VERSION="${BUILDAH_VERSION}" .
+          buildah push --authfile /docker-hub-secrets/auth.json "${IMAGE}"
+
+        workingDir: /build
+        volumeMounts:
+          - name: sources
+            mountPath: /build
+          - name: docker-hub-secrets
+            mountPath: /docker-hub-secrets
+
+      volumes:
+      - name: sources
+        configMap:
+          name: sources
+          items:
+          - key: Dockerfile
+            path: Dockerfile
+          - key: buildah-install.sh
+            path: buildah-install.sh
+            mode: 0755
+      - name: docker-hub-secrets
+        secret:
+          secretName: docker-hub-secrets
