@@ -35,7 +35,8 @@ spec:
         - -c
         - |-
           ./buildah-install.sh
-          buildah bud -t "${IMAGE}" --build-arg BUILDAH_VERSION="${BUILDAH_VERSION}" .
+          # see for --squash : https://github.com/containers/image/issues/733
+          buildah bud --squash -t "${IMAGE}" --build-arg BUILDAH_VERSION="${BUILDAH_VERSION}" .
           buildah push --authfile /docker-hub-secrets/auth.json "${IMAGE}"
 
         workingDir: /build
